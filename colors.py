@@ -37,6 +37,9 @@ def dark_scheme(grid=False):
     mpl.rcParams['axes.labelcolor'] = fg_color # axes label color
     mpl.rcParams['axes.grid'] = grid  # dark scheme implies analysis, grid on
     mpl.rcParams['lines.linewidth'] = thick_line  # in my document, 1.6, 0.8, 0.4 base_font_pt are common thickness,
+    mpl.rcParams['axes.spines.top'] = True
+    mpl.rcParams['axes.spines.right'] = True
+    mpl.rcParams['legend.facecolor'] = 'inherit'
     mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=  # set color cycle to be brighter than normal
                                                  [adjust_lum(col,1.25) for col in col_cyc])
 
