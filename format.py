@@ -431,9 +431,12 @@ def format_spines_ticks(ax=None, xy='x',
     if ticks is not None:
         if ticks == 'auto':
             set_auto_tick(ax, xy=xy, ext=ext)
+        elif isinstance(ticks, (int, float)):
+            ticks = make_ticks(ext, ticks) # if num assume using step with current extents
+            getattr(ax, 'set_'+xy+'ticks')(ticks)
         else:
             getattr(ax, 'set_'+xy+'ticks')(ticks)
-    if ticklabels is not None:
+    if ticklabels:
         getattr(ax, 'set_'+xy+'ticklabels')(ticklabels)
     else:
         fmt_ticks(ax=ax, xy=xy, fmt=fmt, app=app)
@@ -454,7 +457,16 @@ def format_spines_ticks(ax=None, xy='x',
     ax.set_axisbelow(True)
 
 
-
+@applyToAxes
+def add_minor_ticks_bottom(ax=None):
+    ax = ax or mpl.pyplot.gca()
+    num = 5
+    spread = 0.1
+    yticks = ax.get_yticks()
+    ymin, _ = ax.get_ylim()
+    ymid = 0.5*(np.min(yticks)+ymin)
+    spread = 1.0*spread/ymid
+    ax.set_yticks(np.linspace(ymid*(1-spread), ymid*(1+spread), num), minor=True)
 
 """
 Text: titles, and labels
@@ -528,3 +540,8 @@ def set_hist_legend(ax=None):
     new_handles = [mpl.lines.Line2D([], [], c=h.get_edgecolor()) for h in handles]
     mpl.pyplot.legend(handles=new_handles, labels=labels)
 
+
+def legend(*args, **kwargs):
+    ax = kwargs.get('ax',  mpl.pyplot.gca())
+    ax.legend(*args, edgecolor='white', ncol=2, facecolor=(1, 1, 1, 1),
+              frameon=True, framealpha=1.0, loc='lower right', **kwargs)
