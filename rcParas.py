@@ -26,6 +26,8 @@ rc['figure.subplot.top'] =    0.78   # the top of the subplots of the figure
 rc['figure.subplot.wspace'] = 0.2    # the amount of width reserved for space between subplots,
 rc['figure.subplot.hspace'] = 0.2    # expressed as a fraction of the average axi width
 
+rc['savefig.transparent'] = True
+
 rc['lines.linewidth'] = thick_line  # in my document, 1.6, 0.8, 0.4 base_font_pt are common thickness,
 
 

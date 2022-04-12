@@ -15,6 +15,9 @@ import pltx
 def fig_rec1x1():
     ...
 
+def fig_rec1x1small():
+    ...
+
 
 def fig_rec1x2():
     ...

@@ -129,6 +129,12 @@ def add_callout(ax=None, loc=[], where='lb', tick=False, log=''):
                 ax.set_yticks(list(ax.get_yticks()) +[loc[1]])
                 if isinstance(tick, str):
                     ax.set_yticklabels(list(map(op.methodcaller('get_text'), ax.get_yticklabels())) + [str(loc[1])])
+        if a == 'r':
+            draw_line(ax=ax, x=[x_a, 1.0], y=[y_a, y_a])
+            if tick:
+                ax.set_yticks(list(ax.get_yticks()) + [loc[1]])
+                if isinstance(tick, str):
+                    ax.set_yticklabels(list(map(op.methodcaller('get_text'), ax.get_yticklabels())) + [str(loc[1])])
         if a == 'b':
             draw_line(ax=ax, x=[x_a, x_a], y=[0, y_a])
             if tick:
@@ -233,7 +239,7 @@ def pad_right_ticks(ax=None, pad=2, ppc=5, onlyright=True, ticks=None, fmt=None)
             # todo extract number
             # todo need format changin her
             # todo need a way to map decimal chars, make smarter, account for formatting
-            print(pad, ticks)
+            # print(pad, ticks)
         ax.yaxis.set_tick_params(pad=pad)
         for label in ax.yaxis.get_ticklabels():
             label.set_horizontalalignment('right')
@@ -424,6 +430,7 @@ def format_spines_ticks(ax=None, xy='x',
                         shorten=1,  # shorten spines to last tick, different options to play with
                         tick_col=grid_color,
                         zerox=False,
+                        dotsy=False,
                         padright=True,
                         ):  # set x axis at y=0
                         # todo add option to add top or right line?
@@ -451,6 +458,9 @@ def format_spines_ticks(ax=None, xy='x',
         zeroed_xspine(ax)
     else:
         outward_spines(ax=ax, xy=xy)
+    if dotsy and xy == 'x':
+        if not isinstance(dotsy, dict): dotsy = {}
+        add_minor_ticks_bottom(ax, **dotsy)
     if padright:
         pad_right_ticks(ax=ax, pad=padright, ticks=ticklabels or ticks, fmt=fmt)
     set_tick_line_color(ax=ax, color=tick_col)  # must be after spines are adjusted
@@ -458,15 +468,14 @@ def format_spines_ticks(ax=None, xy='x',
 
 
 @applyToAxes
-def add_minor_ticks_bottom(ax=None):
+def add_minor_ticks_bottom(ax=None, num=3, spread=0.1, loc=0.5):
     ax = ax or mpl.pyplot.gca()
-    num = 5
-    spread = 0.1
     yticks = ax.get_yticks()
     ymin, _ = ax.get_ylim()
-    ymid = 0.5*(np.min(yticks)+ymin)
-    spread = 1.0*spread/ymid
-    ax.set_yticks(np.linspace(ymid*(1-spread), ymid*(1+spread), num), minor=True)
+    space = np.min(yticks) - ymin
+    ymid = ymin + loc*space
+    spread = spread*space
+    ax.set_yticks(np.linspace(ymid-spread, ymid+spread, num), minor=True)
 
 """
 Text: titles, and labels
@@ -541,7 +550,15 @@ def set_hist_legend(ax=None):
     mpl.pyplot.legend(handles=new_handles, labels=labels)
 
 
+
 def legend(*args, **kwargs):
     ax = kwargs.get('ax',  mpl.pyplot.gca())
-    ax.legend(*args, edgecolor='white', ncol=2, facecolor=(1, 1, 1, 1),
-              frameon=True, framealpha=1.0, loc='lower right', **kwargs)
+    #todo need to update dict insteat
+    # ncol = 2
+    # loc = 'lower right'
+    opaque = kwargs.pop('opaque', False)
+    kwargs_default = {}
+    if opaque:
+        kwargs_default = dict(edgecolor='white', facecolor=(1, 1, 1, 1),
+                  frameon=True, framealpha=1.0)
+    ax.legend(*args,  **kwargs_default, **kwargs)

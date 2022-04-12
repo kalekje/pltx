@@ -8,6 +8,7 @@ from .colors import dark_scheme, adjust_lum, use_rainbow
 from .sizing import *
 from .format import *
 from .tex import use_tex, sublet
+from . import plasmax
 
 # test new line
 # test another
