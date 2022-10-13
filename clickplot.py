@@ -111,6 +111,9 @@ class ClickPlot:
 
         self.buttons = []  # buttons axes,
 
+        self.x_coord_prev = None
+        self.y_coord_prev = None
+
         self.subplot_twinX_list = []
         self.subplot_twinY_list = []
         self.resetMarkers()
@@ -124,7 +127,9 @@ class ClickPlot:
 
 
 
+
     def resetMarkers(self, event=None):
+        print('')
         self.markers_text_X = []
         self.markers_text_Y = []
 
@@ -136,15 +141,29 @@ class ClickPlot:
         self.subplot_twinY_list = []
 
         for ax in self.subplot_list:
-            self.subplot_twinX_list += [ax.twiny()]
-            self.subplot_twinX_list[-1].set_xticks(self.markers_text_X)
+            axX = ax.twiny()
+            self.subplot_twinX_list += [axX]
             self.subplot_twinX_list[-1].set_xlim(ax.get_xlim())
             self.subplot_twinX_list[-1].grid(linestyle='-', linewidth=0.8)
+            if ax.get_xaxis().get_scale() == 'log':
+                axX.set_xscale('log')
+                from matplotlib.ticker import StrMethodFormatter, NullFormatter
+                axX.xaxis.set_major_formatter(StrMethodFormatter('{x:.0f}'))
+                axX.xaxis.set_minor_formatter(NullFormatter())
+                axX.minorticks_off()
+            self.subplot_twinX_list[-1].set_xticks(self.markers_text_X)
 
-            self.subplot_twinY_list += [ax.twinx()]
-            self.subplot_twinY_list[-1].set_yticks(self.markers_text_Y)
+            axY = ax.twinx()
+            self.subplot_twinY_list += [axY]
             self.subplot_twinY_list[-1].set_ylim(ax.get_ylim())
             self.subplot_twinY_list[-1].grid(linestyle='-', linewidth=0.8)
+            if ax.get_yaxis().get_scale() == 'log':
+                axY.set_yscale('log')
+                from matplotlib.ticker import StrMethodFormatter, NullFormatter
+                axY.yaxis.set_major_formatter(StrMethodFormatter('{x:.0f}'))
+                axY.yaxis.set_minor_formatter(NullFormatter())
+                axY.minorticks_off()
+            self.subplot_twinY_list[-1].set_yticks(self.markers_text_Y)
 
         if event:
             self.draw(event)
@@ -190,11 +209,18 @@ class ClickPlot:
         self.draw(event)
 
 
-
     def addMarkers(self, event, subplot_num=None):
         x_coord = event.xdata
         y_coord = event.ydata
-        print('{0:.3f}, {1:.2f}'.format(float(x_coord), float(y_coord)))
+        s  = '{0:.3f}, {1:.2f}'.format(float(x_coord), float(y_coord))
+        if self.x_coord_prev is not None:
+            sys.stdout.write("\033[F")  # Cursor up one line
+            s +='   |   {0:.3f}, {1:.2f}  < diff'.format(float(x_coord-self.x_coord_prev),
+                                            float(y_coord-self.y_coord_prev))
+        print(s)
+        self.x_coord_prev = x_coord
+        self.y_coord_prev = y_coord
+
 
         if subplot_num is None:
             for subplot in self.subplot_list:
@@ -219,12 +245,13 @@ class ClickPlot:
     def drawAxMarkers(self, ax=None):
         for ax, axX, axY in zip(self.subplot_list, self.subplot_twinX_list,
                                 self.subplot_twinY_list):
-            axX.set_xticks(np.array(np.unique(self.markers_text_X)))
             axX.set_xlim(ax.get_xlim())
+            if self.markers_text_X:
+                axX.set_xticks(np.array(np.unique(self.markers_text_X)))
 
-            axY.set_yticks(np.array(np.unique(self.markers_text_Y)))
             axY.set_ylim(ax.get_ylim())
-
+            if self.markers_text_Y:
+                axY.set_yticks(np.array(np.unique(self.markers_text_Y)))
 
 
     def show(self):
@@ -285,13 +312,15 @@ class ClickPlot:
             if axis == event.inaxes:
                 # subplot_num = 1  # ensure we get the number of subplot
                 # break
-                subplot_num = axis.rowNum  # ensure we get the number of subplot
+                # subplot_num = axis.rownumber # ensure we get the number of subplot
+                subplot_num = axis.get_subplotspec().colspan.start
                 # subplot_num = i
                 break
             if i > 99:
                 break
-        if subplot_num > self.num_subplots - 1:
-            subplot_num = self.num_subplots - 1  # set to last, if bug
+        if subplot_num is not None:
+            if subplot_num > self.num_subplots - 1:
+                subplot_num = self.num_subplots - 1  # set to last, if bug
 
         return subplot_num
 
@@ -435,24 +464,25 @@ class ClickPlot:
         # try:
         if True:
             subplot_num = self.get_subplot_num(event)
-            subplot = self.subplot_list[subplot_num]
-            xmin, xmax = subplot.get_xlim()
-            ymin, ymax = subplot.get_ylim()
-            dx = self.dragFrom[0] - event.xdata
-            dy = self.dragFrom[1] - event.ydata
-            dx_n = dx / (xmax - xmin)  # normalized for comparison
-            dy_n = dy / (ymax - ymin)  # normalized for comparison
-            if abs(dx_n) > abs(dy_n):
-                xmin += dx
-                xmax += dx
-            elif abs(dy_n) > abs(dx_n):
-                ymin += dy
-                ymax += dy
+            if subplot_num is not None:
+                subplot = self.subplot_list[subplot_num]
+                xmin, xmax = subplot.get_xlim()
+                ymin, ymax = subplot.get_ylim()
+                dx = self.dragFrom[0] - event.xdata
+                dy = self.dragFrom[1] - event.ydata
+                dx_n = dx / (xmax - xmin)  # normalized for comparison
+                dy_n = dy / (ymax - ymin)  # normalized for comparison
+                if abs(dx_n) > abs(dy_n):
+                    xmin += dx
+                    xmax += dx
+                elif abs(dy_n) > abs(dx_n):
+                    ymin += dy
+                    ymax += dy
 
-            subplot.set_ylim(ymin, ymax)  # y movement not synchronized
+                subplot.set_ylim(ymin, ymax)  # y movement not synchronized
 
-            for subplot in self.subplot_list:
-                subplot.set_xlim(xmin, xmax)
+                for subplot in self.subplot_list:
+                    subplot.set_xlim(xmin, xmax)
 
         self.draw(event)
 
@@ -516,7 +546,7 @@ class ClickPlot:
 
 
 # todo add kwargs here and pass fault times!
-def showClickPlot(**kwargs):
+def showClickPlot(dontshow=False, **kwargs):
     """
     Show a plt and return a dictionary with information
 
@@ -529,7 +559,10 @@ def showClickPlot(**kwargs):
     """
 
     cp = ClickPlot(**kwargs)
-    return cp.show()
+    if dontshow:
+        return cp
+    else:
+        return cp.show()
 
 
 # https://mplcursors.readthedocs.io/en/stable/

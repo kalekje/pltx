@@ -15,6 +15,7 @@ orange = "#F05F00"
 yellow = "#FFC30B"
 purple = "#820078"
 
+
 col_cyc = [blue, red, green, orange, yellow, purple ]
 col_cyc_rainbow = [blue, purple, red, orange, yellow, green]
 
@@ -33,7 +34,9 @@ def dark_scheme(grid=False):
     mpl.rcParams['savefig.facecolor'] = bg_color
     mpl.rcParams['text.color'] = fg_color  # default text color
     mpl.rcParams['ytick.color'] = fg_color   # changes text AND tick color
+    mpl.rcParams['ytick.labelcolor'] = fg_color   # changes text AND tick color
     mpl.rcParams['xtick.color'] = fg_color  # changes text AND tick color
+    mpl.rcParams['xtick.labelcolor'] = fg_color  # changes text AND tick color
     mpl.rcParams['axes.labelcolor'] = fg_color # axes label color
     mpl.rcParams['axes.grid'] = grid  # dark scheme implies analysis, grid on
     mpl.rcParams['lines.linewidth'] = thick_line  # in my document, 1.6, 0.8, 0.4 base_font_pt are common thickness,
@@ -41,7 +44,7 @@ def dark_scheme(grid=False):
     mpl.rcParams['axes.spines.right'] = True
     mpl.rcParams['legend.facecolor'] = 'inherit'
     mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=  # set color cycle to be brighter than normal
-                                                 [adjust_lum(col,1.25) for col in col_cyc])
+                                                 [adjust_lum(col,1.25) for col in col_cyc])  # todo fix
 
 
 def adjust_lum(color, amount=0.5):
@@ -53,13 +56,18 @@ def adjust_lum(color, amount=0.5):
     except:
         c = color
     c = colorsys.rgb_to_hls(*mc.to_rgb(c))
-    return colorsys.hls_to_rgb(c[0], max(0, min(1, amount * c[1])), c[2])
+    c = list(map(lambda x: min(x,1), c))
+    return colorsys.hls_to_rgb(min(c[0],1.0), max(0, min(1, amount * c[1])), c[2])
 
 
 def use_rainbow():
     mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=col_cyc_rainbow)
 
 
-
-
+def print_cmap_points(c, n):
+    # print_cmap_points('plasma', 12)
+    # todo add flip=False
+    cmap = mpl.cm.get_cmap(c, n)    # PiYG
+    for i in range(0, cmap.N):
+        print(mpl.colors.rgb2hex(cmap(i))) # rgb2hex accepts rgb or rgba
 
