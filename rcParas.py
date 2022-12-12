@@ -16,6 +16,7 @@ try:
 except:
     pass  # not valid for some reason
 
+rc['figure.max_open_warning'] = 128
 rc['figure.frameon'] = False
 rc['figure.figsize'] = [width_default, width_default * ratio_default]  # todo make axis a set size
 # todo should set these based on calculations

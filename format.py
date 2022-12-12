@@ -449,7 +449,9 @@ def format_spines_ticks(ax=None, xy='x',
         fmt_ticks(ax=ax, xy=xy, fmt=fmt, app=app)
     if hideslice:
         hide_ticklabel(ax=ax, xy=xy, slice=hideslice)
-    if ext:
+    if ext == '0max':
+        set_plot_extents(ax=ax, xy=xy, ext=[0, np.max(ticks)])
+    elif ext:
         set_plot_extents(ax=ax, xy=xy, ext=ext)
         # set_plot_extents(ax=ax, xy=xy, ext=ext, buff=0.0) # todo testing for semi log
     if shorten:
@@ -465,6 +467,12 @@ def format_spines_ticks(ax=None, xy='x',
         pad_right_ticks(ax=ax, pad=padright, ticks=ticklabels or ticks, fmt=fmt)
     set_tick_line_color(ax=ax, color=tick_col)  # must be after spines are adjusted
     ax.set_axisbelow(True)
+
+
+@applyToAxes
+def fix_mouse(ax=None):
+    ax = ax or mpl.pyplot.gca()
+    ax.format_coord = lambda x, y: 'x={:g}, y={:g}'.format(x, y)
 
 
 @applyToAxes

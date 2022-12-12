@@ -54,7 +54,7 @@ def use_tex(preamble='', font=font_default, eng=texeng_default):  # to enable la
         with open(preamble) as file:
             preamble = file.read()
     elif preamble:
-        pass
+        pass # todo custom preambe
     else:
         preamble = default[eng + '-' + font] + common
     preamble = clean_preamble(preamble)

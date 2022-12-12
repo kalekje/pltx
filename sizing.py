@@ -50,6 +50,30 @@ def set_subp_pad(fig=None, rows=None, cols=None, ws=wspace_default, hs=hspace_de
     return fig
 
 
+
+def set_subp_size_and_fig(fig=None, rows=None, cols=None, W=None, H=None,
+                           h=1, w=1/1.6, l=1.5, r=1.5, t=1.5, b=1.5):
+    # set a subplots individual axis size, padding, hspace and wspace all in inches
+    fig = fig or mpl.pyplot.gcf()
+    rows = rows or fig.axes[0].numRows
+    cols = cols or fig.axes[0].numCols
+    if not any([W, H]):
+        figw, figh = fig.get_size_inches()
+    else:
+        fig.set_size_inches(W, H)
+
+    kwargs = {
+        'left' : l/figw,
+        'right' : 1 - r/figw,
+        'top' : 1-t/figh,
+        'bottom': b/figh,
+        'hspace': 1-h/(figh - t - b)*(rows-1), #l/figw/(rows-1),
+        'wspace': 1-w/(figw - l - r)*(cols-1) #l/figw/(rows-1),
+    }
+
+    fig.subplots_adjust(**kwargs)
+    return fig
+
 def set_subp_size_and_pad(fig=None, rows=None, cols=None,
                           w=None, h=None, ss=None, hs=hspace_default, ws=wspace_default,
                           l=l_default, t=t_default, r=None, b=b_default, square=False):
