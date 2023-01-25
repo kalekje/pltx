@@ -152,3 +152,6 @@ def groupby_head_chunk_cols_plot(ddf, head, by=['h1', 'h2'], chunk=8, plotkw={})
     # from matplotlib.backends.backend_pgf import FigureCanvasPgf
     # matplotlib.backend_bases.register_backend('pdf', FigureCanvasPgf)
     # https://matplotlib.org/stable/tutorials/text/pgf.html
+
+
+
