@@ -13,6 +13,22 @@ def make_2x4_plot(square=False):
     pltx.set_subp_size_and_fig(fig=fig, w=w, h=h, l=1.5)
     return fig, axs
 
+
+def make_zx4_plot(square=False): # zoom by 4
+    w = 3
+    h = w/1.6
+    if square:
+        h = w
+    fig, axs = mpl.pyplot.subplots(nrows=4, ncols=2, figsize=(8.5, 11), gridspec_kw={'width_ratios': [1, 3]})
+    pltx.set_subp_size_and_fig(fig=fig, w=w, h=h, l=1.5)
+    fig.subplots_adjust(wspace=0.1)
+    for n in range(1, axs.size, 2):
+        axs.flatten()[n].spines[['left']].set_visible(False)
+        axs.flatten()[n].spines[['right']].set_visible(True)
+        axs.flatten()[n].yaxis.tick_right()
+    return fig, axs
+
+
 def make_2x5_plot(square=False):
     w = 2
     h = w/1.6
@@ -63,10 +79,8 @@ def multipageplot(fname='plot', size='2x4', flat=True, maxpages=None, tex=True, 
                 pagenum += 1
 
                 pltx.use_tex(**texkw)
-                if size == '2x4':
-                    fig, axs = make_2x4_plot()
-                else:
-                    fig, axs = make_2x5_plot()
+
+                fig, axs = globals()['make_'+size+'_plot']()
 
 
                 if flat: axs = axs.flatten()
