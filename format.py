@@ -18,6 +18,9 @@ def rgetattr(obj, attr, *args):  # recursive getattr, works for nested attr
         return getattr(obj, attr, *args)
     return ft.reduce(_getattr, [obj] + attr.split('.'))
 
+
+
+
 def applyToAxes(func):
     """
     allow a function with first arg as an "ax" to accept:
@@ -29,36 +32,32 @@ def applyToAxes(func):
     def wrapper(*args, **kwargs):
         applyAxes = False
 
-        # args = kwargs.get(ax) or args_og  # todo should consider axes kwarg as well
-        # try:
-        #     kwargs.pop('ax') # remove ax from kwargs and now pass it in args
-        # except:
-        #     pass
-
-        if args:
+        if kwargs.get('ax'):
+            axs = kwargs['ax']
+            kwargs.pop('ax')
+            argsother = tuple()
+            if args:
+                raise Exception('pltx.applyToAxes: PASSED ax kw and args, bad')
+        elif args:
             if isinstance(args, tuple):
                 axs = args[0]
                 argsother = tuple(args[1:])
             else:
                 axs = args
                 argsother = tuple()
+        else:
+            print('pltx.applyToAxes: argument error')
 
-            if isinstance(axs, mpl.figure.Figure):
-                axs = np.array(axs.axes).flatten()
-                applyAxes = True
-            elif isinstance(axs, mpl.axes.Axes):
-                axs = np.array(axs).flatten()
-                applyAxes = True
-            elif isinstance(axs, (list, tuple, np.ndarray)):
-                axs = np.array(axs).flatten()
-                if isinstance(axs[0], mpl.axes.Axes):
-                    applyAxes = True
+        if isinstance(axs, mpl.figure.Figure):
+            axs = np.array(axs.axes).flatten()
+        elif isinstance(axs, (mpl.axes.Axes, list, tuple, np.ndarray)):
+            axs = np.array(axs).flatten()
+        else:
+            raise Exception('pltx.applyToAxes: bad axs type')
 
-        if applyAxes: # if axes was passed, iterate through and apply to each
-            for ax in axs:
-                func(ax, *argsother, **kwargs)
-        else:  # apply function as is
-            func(*args, **kwargs)
+        for ax in axs:
+            func(ax, *argsother, **kwargs)
+
     return wrapper
 
 
@@ -354,6 +353,14 @@ def zeroed_xspine(ax=None):
     quick_axis_format(ax, outward=False)
 
 
+@applyToAxes
+def zeroed_yspine(ax=None):
+    ax = ax or mpl.pyplot.gca()
+    ax.spines['top'].set_position(('data', 0.0))
+    ax.tick_params(axis='y', direction='inout')
+    quick_axis_format(ax, outward=False)
+
+
 def get_data_extents(ax=None):
     # todo consider making this general so it might work with any array or hexbin plot or histogram, for example
     # if (not x and not y):
@@ -435,7 +442,7 @@ def format_axis(ax=None, xy='x',
                         fmt='.1f', app=None, hideslice='',  # tick frmting, append ' s', hide even or odd ticks
                         shorten=1,  # shorten spines to last tick, different options to play with
                         tick_col=grid_color,
-                        zerox=False,
+                        zerox=False, zeroy=False,
                         dotsy=False,
                         padright=False,
                         quick=True,
@@ -467,6 +474,8 @@ def format_axis(ax=None, xy='x',
         shorten_spines(ax=ax, opt=shorten)
     if zerox and xy == 'x':
         zeroed_xspine(ax)
+    if zeroy and xy == 'y':
+        zeroed_yspine(ax)
     else:
         outward_spines(ax=ax, xy=xy)
     if dotsy and xy == 'x':
