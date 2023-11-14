@@ -103,13 +103,14 @@ def chunkify_rows(df: pd.DataFrame, chunk_size: int):
     # If DF is smaller than the chunk, return the DF
     if length <= chunk_size:
         yield df[:]
-    # Yield individual chunks
-    while start + chunk_size <= length:
-        yield df[start:chunk_size + start]
-        start = start + chunk_size
-    # Yield the remainder chunk, if needed
-    if start < length:
-        yield df[start:]
+    else:
+        # Yield individual chunks
+        while start + chunk_size <= length:
+            yield df[start:chunk_size + start]
+            start = start + chunk_size
+        # Yield the remainder chunk, if needed
+        if start < length:
+            yield df[start:]
 
 def chunkify_cols(df: pd.DataFrame, chunk_size: int):
     start = 0
@@ -117,13 +118,14 @@ def chunkify_cols(df: pd.DataFrame, chunk_size: int):
     # If DF is smaller than the chunk, return the DF
     if length <= chunk_size:
         yield df[:]
-    # Yield individual chunks
-    while start + chunk_size <= length:
-        yield df.iloc[:,start:chunk_size + start]
-        start = start + chunk_size
-    # Yield the remainder chunk, if needed
-    if start < length:
-        yield df.iloc[:,start:]
+    else:
+        # Yield individual chunks
+        while start + chunk_size <= length:
+            yield df.iloc[:,start:chunk_size + start]
+            start = start + chunk_size
+        # Yield the remainder chunk, if needed
+        if start < length:
+            yield df.iloc[:,start:]
 
 def partition_cols(df,  partitions=[]):
     # iterate over parts of data frame, divided at column ints in partions
@@ -140,7 +142,9 @@ def partition_chunk_cols_plot(ddf, parts=[], chunk=8, plotkw={}):
 
 def groupby_head_chunk_cols_plot(ddf, head, by=['h1', 'h2'], chunk=8, plotkw={}):
     """
-    iterate through data frame, first grouped by, then chunkified
+    iterate through data frame, first grouped by, then chunkified, and return a new fig and ax for plotting
+
+    plotkw are: fname='plot', size='2x4', flat=True, maxpages=None, tex=True, texkw={},  colwise=False
     """
     for name, h in head.groupby(by, axis=0):
         if not isinstance(name, str): name = '+'.join(name)
@@ -151,6 +155,8 @@ def groupby_head_chunk_cols_plot(ddf, head, by=['h1', 'h2'], chunk=8, plotkw={})
         for (d), (pg, fig, axs) in zip(pltx.chunkify_cols(df, chunk),
                                        pltx.multipageplot(**plotkw)):
             yield d, h, name, pg, fig, axs
+
+
 
 # fig, axs = plt.subplots(nrows=4, ncols=2, figsize=(8.5, 11))
 # plt.show()

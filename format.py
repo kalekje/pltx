@@ -29,6 +29,12 @@ def applyToAxes(func):
     def wrapper(*args, **kwargs):
         applyAxes = False
 
+        # args = kwargs.get(ax) or args_og  # todo should consider axes kwarg as well
+        # try:
+        #     kwargs.pop('ax') # remove ax from kwargs and now pass it in args
+        # except:
+        #     pass
+
         if args:
             if isinstance(args, tuple):
                 axs = args[0]
@@ -423,7 +429,7 @@ def quick_axis_format(ax, outward=True):
     return ax
 
 @applyToAxes
-def format_spines_ticks(ax=None, xy='x',
+def format_axis(ax=None, xy='x',
                         ext=None,  # extents of plot area, small buffer added, graph exceeding is clipped off
                         ticks=None, ticklabels=None,  # specify exact ticks and labels
                         fmt='.1f', app=None, hideslice='',  # tick frmting, append ' s', hide even or odd ticks
@@ -431,10 +437,13 @@ def format_spines_ticks(ax=None, xy='x',
                         tick_col=grid_color,
                         zerox=False,
                         dotsy=False,
-                        padright=True,
+                        padright=False,
+                        quick=True,
                         ):  # set x axis at y=0
                         # todo add option to add top or right line?
     ax = ax or mpl.pyplot.gca()
+    if quick:
+        quick_axis_format(ax)
     if ticks is not None:
         if ticks == 'auto':
             set_auto_tick(ax, xy=xy, ext=ext)
@@ -468,6 +477,8 @@ def format_spines_ticks(ax=None, xy='x',
     set_tick_line_color(ax=ax, color=tick_col)  # must be after spines are adjusted
     ax.set_axisbelow(True)
 
+format_spines_ticks = format_axis
+
 
 @applyToAxes
 def fix_mouse(ax=None):
@@ -484,6 +495,9 @@ def add_minor_ticks_bottom(ax=None, num=3, spread=0.1, loc=0.5):
     ymid = ymin + loc*space
     spread = spread*space
     ax.set_yticks(np.linspace(ymid-spread, ymid+spread, num), minor=True)
+
+
+
 
 """
 Text: titles, and labels
