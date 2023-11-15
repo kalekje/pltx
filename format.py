@@ -503,7 +503,6 @@ def format_axis(ax=None, xy='x',
         getattr(ax, xy+'axis').grid(grid)
 
     ax.set_axisbelow(below)
-    ax.set_zorder(9.5)
 
 format_spines_ticks = format_axis
 
