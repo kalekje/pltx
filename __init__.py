@@ -19,5 +19,16 @@ def showmax():
     # mng.resize(*mng.window.maxsize())
     plt.show()
 
+def savepdf(name='', fig=None, crop=True, kwargs={}):
+    import matplotlib.pyplot as plt
+    fig = fig or plt.gcf()
+    if crop:
+        from pdffun import pdfcrop
+        name += '-uncrop'
+    fig.savefig(name+'.pdf', **kwargs)
+    if crop:
+        pdfcrop(name+'.pdf', name.replace('-uncrop','')+'.pdf')
+
+
 # test new line
 # test another

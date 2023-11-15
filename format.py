@@ -32,7 +32,7 @@ def applyToAxes(func):
     def wrapper(*args, **kwargs):
         applyAxes = False
 
-        if kwargs.get('ax'):
+        if kwargs.get('ax') is not None:
             axs = kwargs['ax']
             kwargs.pop('ax')
             argsother = tuple()
@@ -303,7 +303,7 @@ def add_top_xaxis(ax=None, plotinv=False, **kwargs):
 
 
 @applyToAxes
-def set_plot_extents(ax=None, xy='x', ext=[], buff=0.005):
+def set_plot_extents(ax=None, xy='x', ext=[], buff=0.000001):
     # sets limits, adds a small buffer (default is very small, 1%)
     ax = ax or mpl.pyplot.gca()
     rat = 1.0
@@ -343,21 +343,29 @@ def outward_spines(ax=None, xy='x'):
         if xory == 'y': sides = ('left', 'right')
         for side in sides:
             ax.spines[side].set_position(('outward', tick_length))
+            ax.spines[side].set_zorder(0.5)
     return ax
 
-@applyToAxes
-def zeroed_xspine(ax=None):
-    ax = ax or mpl.pyplot.gca()
-    ax.spines['bottom'].set_position(('data', 0.0))
-    ax.tick_params(axis='x', direction='inout')
-    quick_axis_format(ax, outward=False)
-
 
 @applyToAxes
-def zeroed_yspine(ax=None):
+def hug_spines(ax=None, xy='x'):
     ax = ax or mpl.pyplot.gca()
-    ax.spines['top'].set_position(('data', 0.0))
-    ax.tick_params(axis='y', direction='inout')
+    for xory in xy:
+        if xory == 'x': sides = ('bottom', 'top')
+        if xory == 'y': sides = ('left', 'right')
+        for side in sides:
+            ax.spines[side].set_position(('outward', 0))
+            ax.spines[side].set_zorder(0.5)
+    return ax
+
+
+
+@applyToAxes
+def zeroed_spine(ax=None, xy='x'):
+    ax = ax or mpl.pyplot.gca()
+    ax.spines[{'x':'bottom','y':'left'}[xy]].set_position(('data', 0.0))
+    ax.spines[{'x': 'bottom', 'y': 'left'}[xy]].set_zorder(0.5)
+    ax.tick_params(axis=xy, direction='inout')
     quick_axis_format(ax, outward=False)
 
 
@@ -437,20 +445,22 @@ def quick_axis_format(ax, outward=True):
 
 @applyToAxes
 def format_axis(ax=None, xy='x',
-                        ext=None,  # extents of plot area, small buffer added, graph exceeding is clipped off
+                        ext=None,  # extents of plot area, small buffer added as the graph exceeding is clipped off
                         ticks=None, ticklabels=None,  # specify exact ticks and labels
-                        fmt='.1f', app=None, hideslice='',  # tick frmting, append ' s', hide even or odd ticks
+                        fmt='.1f', app=None, hideslice='',  # tick frmting, append ' s' to last tick for example, hide even or odd ticks with hideslice
                         shorten=1,  # shorten spines to last tick, different options to play with
                         tick_col=grid_color,
-                        zerox=False, zeroy=False,
+                        pos='pad',  # pad has spines outside, hug means they hug chart area (ticks go in), or zero
                         dotsy=False,
                         padright=False,
-                        quick=True,
+                        quick=True,  # apply quick axis format first, useful
+                        below=True,  # move axes below
+                        grid=False,
                         ):  # set x axis at y=0
                         # todo add option to add top or right line?
     ax = ax or mpl.pyplot.gca()
     if quick:
-        quick_axis_format(ax)
+        quick_axis_format(ax, outward=(pos=='pad'))
     if ticks is not None:
         if ticks == 'auto':
             set_auto_tick(ax, xy=xy, ext=ext)
@@ -459,6 +469,8 @@ def format_axis(ax=None, xy='x',
             getattr(ax, 'set_'+xy+'ticks')(ticks)
         else:
             getattr(ax, 'set_'+xy+'ticks')(ticks)
+    else:
+        print('pltx.format_axis: WARNING! no ticks passed, expect pboblems')
     if ticklabels:
         getattr(ax, 'set_'+xy+'ticklabels')(ticklabels)
     else:
@@ -472,19 +484,26 @@ def format_axis(ax=None, xy='x',
         # set_plot_extents(ax=ax, xy=xy, ext=ext, buff=0.0) # todo testing for semi log
     if shorten:
         shorten_spines(ax=ax, opt=shorten)
-    if zerox and xy == 'x':
-        zeroed_xspine(ax)
-    if zeroy and xy == 'y':
-        zeroed_yspine(ax)
-    else:
+
+    if pos == 'zero':
+        zeroed_spine(ax=ax, xy=xy)
+    elif pos == 'pad':
         outward_spines(ax=ax, xy=xy)
+    elif pos == 'hug':
+        hug_spines(ax=ax, xy=xy)
+
     if dotsy and xy == 'x':
         if not isinstance(dotsy, dict): dotsy = {}
         add_minor_ticks_bottom(ax, **dotsy)
     if padright:
         pad_right_ticks(ax=ax, pad=padright, ticks=ticklabels or ticks, fmt=fmt)
     set_tick_line_color(ax=ax, color=tick_col)  # must be after spines are adjusted
-    ax.set_axisbelow(True)
+
+    if grid:
+        getattr(ax, xy+'axis').grid(grid)
+
+    ax.set_axisbelow(below)
+    ax.set_zorder(9.5)
 
 format_spines_ticks = format_axis
 
