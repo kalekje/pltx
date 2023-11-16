@@ -29,6 +29,10 @@ def savepdf(name='', fig=None, crop=True, kwargs={}):
     if crop:
         pdfcrop(name+'.pdf', name.replace('-uncrop','')+'.pdf')
 
+def flip_lims(lims):
+    return [-lims[1], -lims[0]]
+
+
 # test
 # test new line
 # test another
