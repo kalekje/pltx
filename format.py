@@ -364,10 +364,10 @@ def hug_spines(ax=None, xy='x'):
 @applyToAxes
 def zeroed_spine(ax=None, xy='x'):
     ax = ax or mpl.pyplot.gca()
-    ax.spines[{'x':'bottom','y':'left'}[xy]].set_position(('data', 0.0))
-    ax.spines[{'x': 'bottom', 'y': 'left'}[xy]].set_zorder(0.5)
+    ax.spines[{'x':'bottom', 'y':'left'}[xy]].set_position(('data', 0.0))
+    ax.spines[{'x':'bottom', 'y':'left'}[xy]].set_zorder(0.5)
     ax.tick_params(axis=xy, direction='inout')
-    quick_axis_format(ax, outward=False)
+    # quick_axis_format(ax, outward=False)
 
 
 def get_data_extents(ax=None):
@@ -454,14 +454,12 @@ def format_axis(ax=None, xy='x',
                         pos='pad',  # pad has spines outside, hug means they hug chart area (ticks go in), or zero
                         dotsy=False,
                         padright=False,
-                        quick=True,  # apply quick axis format first, useful
                         below=True,  # move axes below
                         grid=False,
+                        quick='UNUSED',
                         ):  # set x axis at y=0
-                        # todo add option to add top or right line?
+    # todo add option to add top or right line?
     ax = ax or mpl.pyplot.gca()
-    if quick:
-        quick_axis_format(ax, outward=(pos=='pad'))
     if ticks is not None:
         if ticks == 'auto':
             set_auto_tick(ax, xy=xy, ext=ext)
@@ -498,10 +496,11 @@ def format_axis(ax=None, xy='x',
         add_minor_ticks_bottom(ax, **dotsy)
     if padright:
         pad_right_ticks(ax=ax, pad=padright, ticks=ticklabels or ticks, fmt=fmt)
-    set_tick_line_color(ax=ax, color=tick_col)  # must be after spines are adjusted
-
+    
     if grid:
         getattr(ax, xy+'axis').grid(grid)
+    
+    set_tick_line_color(ax=ax, color=tick_col)  # must be after spines are adjusted
 
     ax.set_axisbelow(below)
 
