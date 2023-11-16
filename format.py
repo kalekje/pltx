@@ -46,7 +46,7 @@ def applyToAxes(func):
                 axs = args
                 argsother = tuple()
         else:
-            print('pltx.applyToAxes: argument error')
+            ax = mpl.pyplot.gca()
 
         if isinstance(axs, mpl.figure.Figure):
             axs = np.array(axs.axes).flatten()
