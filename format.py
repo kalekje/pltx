@@ -32,10 +32,11 @@ def applyToAxes(func):
     def wrapper(*args, **kwargs):
         applyAxes = False
 
+        argsother = tuple()
+
         if kwargs.get('ax') is not None:
             axs = kwargs['ax']
             kwargs.pop('ax')
-            argsother = tuple()
             if args:
                 raise Exception('pltx.applyToAxes: PASSED ax kw and args, bad')
         elif args:
@@ -44,9 +45,9 @@ def applyToAxes(func):
                 argsother = tuple(args[1:])
             else:
                 axs = args
-                argsother = tuple()
         else:
             axs = mpl.pyplot.gca()
+            
 
         if isinstance(axs, mpl.figure.Figure):
             axs = np.array(axs.axes).flatten()
