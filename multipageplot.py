@@ -140,7 +140,7 @@ def partition_chunk_cols_plot(ddf, parts=[], chunk=8, plotkw={}):
                                        pltx.multipageplot(**plotkw)):
             yield d, pg, fig, axs
 
-def groupby_head_chunk_cols_plot(ddf, head, by=['h1', 'h2'], chunk=8, plotkw={}):
+def groupby_head_chunk_cols_plot(ddf, head, by=['h1', 'h2'], chunk=None, plotkw={}):
     """
     iterate through data frame, first grouped by, then chunkified, and return a new fig and ax for plotting
 
@@ -152,6 +152,7 @@ def groupby_head_chunk_cols_plot(ddf, head, by=['h1', 'h2'], chunk=8, plotkw={})
         inds = list(sorted(list(set(inds) & set(ddf.columns.values))))
         df = ddf[inds]  # sub-data frame
         plotkw['fname'] = name
+        chunk = chunk or len(df)
         for (d), (pg, fig, axs) in zip(pltx.chunkify_cols(df, chunk),
                                        pltx.multipageplot(**plotkw)):
             yield d, h, name, pg, fig, axs

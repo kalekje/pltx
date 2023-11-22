@@ -12,13 +12,12 @@ from .defaults import *
 from .sizing import get_axes_size
 
 import functools as ft, operator as op
+
 # https://stackoverflow.com/questions/31174295/getattr-and-setattr-on-nested-subobjects-chained-properties
-def rgetattr(obj, attr, *args):  # recursive getattr, works for nested attr
-    def _getattr(obj, attr):
-        return getattr(obj, attr, *args)
-    return ft.reduce(_getattr, [obj] + attr.split('.'))
 
+from .utils import is_arr, rgetattr
 
+trbl = dict(t='top', r='right', b='bottom', l='left')
 
 
 def applyToAxes(func):
@@ -121,10 +120,19 @@ def add_gridline(ax=None, val=0, d='h'):
     ax = ax or mpl.pyplot.gca()
     if not isinstance(val, list): val = [val]
     for v in val:
-        getattr(ax, 'ax'+d+'line')(v, lw=0.4, color=grid_color, zorder=1)
+        getattr(ax, 'ax'+d+'line')(v, lw=thin_line, color=grid_color, zorder=1)
     ax.set_axisbelow(True)
     return ax
     # ax.draw() # maybe this invokes z order # todo investigate
+
+
+@applyToAxes # todo
+def add_xline(ax=None, val=[0]):
+    ax = ax or mpl.pyplot.gca()
+    lims = ax.get_xlim()
+    ax.hlines(y=val, xmin=lims[0], xmax=lims[1], colors=grid_color, lw=thin_line,
+                zorder=0.5)
+
 
 @applyToAxes
 def add_callout(ax=None, loc=[], where='lb', tick=False, log=''):
@@ -459,7 +467,7 @@ def format_axis(ax=None, xy='x',
                         ext=None,  # extents of plot area, small buffer added as the graph exceeding is clipped off
                         ticks=None, ticklabels=None,  # specify exact ticks and labels
                         fmt='.1f', app=None, hideslice='',  # tick frmting, append ' s' to last tick for example, hide even or odd ticks with hideslice
-                        shorten=1,  # shorten spines to last tick, different options to play with
+                        shorten=1, spinext=None,  # shorten spines to last tick, different options to play with
                         tick_col=grid_color,
                         pos='pad',  # pad has spines outside, hug means they hug chart area (ticks go in), or zero
                         dotsy=False,
@@ -467,19 +475,21 @@ def format_axis(ax=None, xy='x',
                         below=True,  # move axes below
                         grid=False,
                         quick='UNUSED',
+                        hidespines='', showspines='',
                         ):  # set x axis at y=0
     # todo add option to add top or right line?
     ax = ax or mpl.pyplot.gca()
-    if ticks is not None:
-        if ticks == 'auto':
-            set_auto_tick(ax, xy=xy, ext=ext)
-        elif isinstance(ticks, (int, float)):
-            ticks = make_ticks(ext, ticks) # if num assume using step with current extents
-            getattr(ax, 'set_'+xy+'ticks')(ticks)
-        else:
-            getattr(ax, 'set_'+xy+'ticks')(ticks)
+
+    if isinstance(ticks, (int, float)):
+        ticks = make_ticks(ext, ticks) # if num assume using step with current extents
+        getattr(ax, 'set_'+xy+'ticks')(ticks)
+    elif is_arr(ticks):
+        getattr(ax, 'set_' + xy + 'ticks')(ticks)
+    elif ticks == 'auto':
+        set_auto_tick(ax, xy=xy, ext=ext)
     else:
         print('pltx.format_axis: WARNING! no ticks passed, expect pboblems')
+
     if ticklabels:
         getattr(ax, 'set_'+xy+'ticklabels')(ticklabels)
     else:
@@ -501,6 +511,9 @@ def format_axis(ax=None, xy='x',
     elif pos == 'hug':
         hug_spines(ax=ax, xy=xy)
 
+    if spinext:
+        ax.spines['right'].set_bounds(spinex) # todo need to allow for tweakng spine length
+
     if dotsy and xy == 'x':
         if not isinstance(dotsy, dict): dotsy = {}
         add_minor_ticks_bottom(ax, **dotsy)
@@ -509,7 +522,12 @@ def format_axis(ax=None, xy='x',
     
     if grid:
         getattr(ax, xy+'axis').grid(grid)
-    
+
+    for s in hidespines:
+        ax.spines[trbl[s]].set_visible(False)
+    for s in showspines:
+        ax.spines[trbl[s]].set_visible(True)
+
     set_tick_line_color(ax=ax, color=tick_col)  # must be after spines are adjusted
 
     ax.set_axisbelow(below)

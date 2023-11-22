@@ -15,6 +15,14 @@ orange = "#F05F00"
 yellow = "#FFC30B"
 purple = "#820078"
 
+umbrown = "#4F2C1D"
+umblue = "#385e9d"
+
+# rown blue green gold liblue
+# cols = ["#4F2C1D", "#385e9d", "#00820a","#FFD700", "#00a3e0"]
+#       brown       um d blue               try darkolivegreen
+# cols = [umbrow, , "darkgoldenrod", "#00a3e0"]
+
 
 col_cyc = [blue, red, green, orange, yellow, purple ]
 col_cyc_rainbow = [blue, purple, red, orange, yellow, green]
