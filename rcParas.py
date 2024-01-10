@@ -59,7 +59,7 @@ for xy in 'xy':
         rc[xy+'tick.labelcolor'] = color_main_text  # works for MPL ver 3.4, using 3.1
     except:
         rc[xy + 'tick.color'] = color_main_text  # changes text AND tick color
-    for mm, fact in zip(('major', 'minor'), (1, 0.75)):  # minor ticks for log plots, make a bit shorter
+    for mm, fact in zip(('major', 'minor'), (1, 0.5)):  # minor ticks for log plots, make a bit shorter
         rc[xy+'tick.'+mm+'.width'] = thin_line  # in pts
         rc[xy+'tick.'+mm+'.size'] = tick_length*fact  # in pts
 

@@ -72,10 +72,12 @@ def use_rainbow():
     mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=col_cyc_rainbow)
 
 
-def print_cmap_points(c, n):
-    # print_cmap_points('plasma', 12)
-    # todo add flip=False
+def print_cmap_points(c, n=128, flip=False, tex=True):
+    import numpy as np
     cmap = mpl.cm.get_cmap(c, n)    # PiYG
-    for i in range(0, cmap.N):
-        print(mpl.colors.rgb2hex(cmap(i))) # rgb2hex accepts rgb or rgba
+    for i in range(0, cmap.N)[::(-1 if flip else 1)]:
+        if not tex:
+            print(mpl.colors.rgb2hex(cmap(i))) # rgb2hex accepts rgb or rgba
+        else:
+            print(f'rgb255=({np.round(cmap(i)[0]*255,0):.0f}, {np.round(cmap(i)[1]*255):.0f}, {np.round(cmap(i)[2]*255):.0f});')
 

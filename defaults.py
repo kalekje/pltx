@@ -45,7 +45,5 @@ thin_line = 0.4
 
 tick_length = 4
 
-texeng_default = 'pdf'
-font_default = 'sans'
-
+tex_preamble_default = 'cmb sans lua'
 

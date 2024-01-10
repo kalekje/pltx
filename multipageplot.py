@@ -4,17 +4,24 @@ import matplotlib as mpl
 import pltx
 
 
-def make_2x4_plot(square=False):
+def make_generic_subplot(w=None, h=None, square=False, r=1, c=1):
     w = 3
     h = w/1.6
     if square:
         h = w
-    fig, axs = mpl.pyplot.subplots(nrows=4, ncols=2, figsize=(8.5, 11))
+    fig, axs = mpl.pyplot.subplots(nrows=r, ncols=c, figsize=(8.5, 11))
     pltx.set_subp_size_and_fig(fig=fig, w=w, h=h, l=1.5)
     return fig, axs
 
 
-def make_zx4_plot(square=False): # zoom by 4
+def make_2x4_plot(square=False):
+    return make_generic_subplot(w=3, h=1.9, r=4, c=2)
+
+def make_2x5_plot(square=False):  # todo need better space
+    return make_generic_subplot(w=3, h=1.4, r=5, c=2)
+
+
+def make_zx4_plot(square=False): # zoom by 4, have a narrow and wide axis, 4 rows
     w = 3
     h = w/1.6
     if square:
@@ -29,24 +36,12 @@ def make_zx4_plot(square=False): # zoom by 4
     return fig, axs
 
 
-def make_2x5_plot(square=False):
-    w = 2
-    h = w/1.6
-    if square:
-        h = w
-    fig, axs = mpl.pyplot.subplots(nrows=5, ncols=2, figsize=(8.5, 11))
-    pltx.set_subp_size_and_fig(fig=fig, w=w, h=h, l=1.5)
-    return fig, axs
-
-
-
-
 def clear_remaining_axes(axs):
     for a in axs:
         if not (a.lines or a.collections or bool(a.get_images())):
             a.set_axis_off()
 
-def multipageplot(fname='plot', size='2x4', flat=True, maxpages=None, tex=True, texkw={},
+def multipageplot(fname='plot', size='2x4', flat=True, maxpages=None, tex=True,
                   colwise=False):
     """
     An iterator that yields a next pagenum, fig, and ax until a break statement is employed
@@ -63,7 +58,7 @@ def multipageplot(fname='plot', size='2x4', flat=True, maxpages=None, tex=True, 
         for d, (pg, fig, ax) in zip(chunkify(df), multiplateplot(...)):
     """
 
-    if tex:
+    if tex: # backend must be changed if using tex
         from matplotlib.backends.backend_pgf import PdfPages
     else:
         from matplotlib.backends.backend_pdf import PdfPages
@@ -77,8 +72,6 @@ def multipageplot(fname='plot', size='2x4', flat=True, maxpages=None, tex=True, 
                 if pagenum > 1:
                     pdf.savefig(fig_prev)  # saves the current figure into a pdf page, next one will be made
                 pagenum += 1
-
-                pltx.use_tex(**texkw)
 
                 fig, axs = globals()['make_'+size+'_plot']()
 
@@ -140,7 +133,7 @@ def partition_chunk_cols_plot(ddf, parts=[], chunk=8, plotkw={}):
                                        pltx.multipageplot(**plotkw)):
             yield d, pg, fig, axs
 
-def groupby_head_chunk_cols_plot(ddf, head, by=['h1', 'h2'], chunk=None, plotkw={}):
+def groupby_head_chunk_cols_plot(ddf, head, by=['h1', 'h2'], chunk=None, plotkw={}, tex=True):
     """
     iterate through data frame, first grouped by, then chunkified, and return a new fig and ax for plotting
 
@@ -154,7 +147,7 @@ def groupby_head_chunk_cols_plot(ddf, head, by=['h1', 'h2'], chunk=None, plotkw=
         plotkw['fname'] = name
         chunk = chunk or len(df)
         for (d), (pg, fig, axs) in zip(pltx.chunkify_cols(df, chunk),
-                                       pltx.multipageplot(**plotkw)):
+                                       pltx.multipageplot(**plotkw, tex=tex)):
             yield d, h, name, pg, fig, axs
 
 

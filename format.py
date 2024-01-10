@@ -100,6 +100,33 @@ def make_ticks(ext=[], step=1, xy='', ax=None):
         pass # todo call autoticks here with min and max
     return np.arange(ext[0], ext[1]*(1+0.0001), step)
 
+def make_ticks_zero(ext=None, step=1, xy='', ax=None):
+    """
+    return a set of ticks (including a zero tick) of step size 0, between extents ext (todo change ext to lim)
+    """
+    ax = ax or mpl.pyplot.gca()
+    eps = 1e-6
+    # makes a np range between two nubers with appropriate step
+
+    if ext == None or ext == []:  # todo should clean this up
+        x_min, x_max, y_min, y_max = get_data_extents(ax=ax)
+        if xy == 'y':
+            ext = [y_min, y_max]
+        if xy == 'x':
+            ext = [x_min, x_max]
+
+    # todo check if ticks pass zero first of all
+
+    ext = [np.min(ext), np.max(ext)]  # ensure correct order
+    if np.sign(ext[0])*np.sign(ext[1]) == -1: # if positive and negative
+        ticks = np.concatenate((-np.arange(0, -ext[0]*(1+eps), step)[::-1], np.arange(0,  ext[1]*(1+eps), step)[1:]))
+    elif np.sign(ext[0]) == -1: # if negative lower tick
+        ticks = -np.arange(-ext[1], -ext[0]*(1+eps), step)[::-1]  # first tick is always included
+    elif np.sign(ext[1]) == 1: # if positive upper tick
+        ticks = np.arange(ext[0],  ext[1]*(1+eps), step) # first tick is always included
+    return ticks
+
+
 @applyToAxes
 def draw_line(ax=None, x=[0,1], y=[0,0], color=grid_color):
     ax = ax or mpl.pyplot.gca()
@@ -384,7 +411,8 @@ def zeroed_spine(ax=None, xy='x'):
     ax = ax or mpl.pyplot.gca()
     ax.spines[{'x':'bottom', 'y':'left'}[xy]].set_position(('data', 0.0))
     ax.spines[{'x':'bottom', 'y':'left'}[xy]].set_zorder(0.5)
-    ax.tick_params(axis=xy, direction='inout')
+    ax.tick_params(axis=xy, which='both', direction='inout')
+
     # quick_axis_format(ax, outward=False)
 
 
@@ -462,33 +490,64 @@ def quick_axis_format(ax, outward=True):
     ax.set_axisbelow(True)
     return ax
 
+def parse_xy(xy):
+    if xy == 'x':
+        side = 'b'
+    if xy == 'y':
+        side = 'l'
+    if 'r' in xy:
+        xy = 'y'
+        side = 'r'
+    if 't' in xy:
+        xy = 'x'
+        side = 't'
+    return xy, side
+
 @applyToAxes
 def format_axis(ax=None, xy='x',
-                        ext=None,  # extents of plot area, small buffer added as the graph exceeding is clipped off
+                        lims=None, # extents of plot area, small buffer added as the graph exceeding is clipped offt
+                        ext=None,  # DEPRECATED, lims=ext
                         ticks=None, ticklabels=None,  # specify exact ticks and labels
                         fmt='.1f', app=None, hideslice='',  # tick frmting, append ' s' to last tick for example, hide even or odd ticks with hideslice
-                        shorten=1, spinext=None,  # shorten spines to last tick, different options to play with
+                        minor=0,  # minor tick inteval
                         tick_col=grid_color,
-                        pos='pad',  # pad has spines outside, hug means they hug chart area (ticks go in), or zero
-                        dotsy=False,
-                        padright=False,
-                        below=True,  # move axes below
+                        pos='pad',  # position of spine pad has spines outside, hug means they hug chart area (ticks go in), or zero
                         grid=False,
-                        quick='UNUSED',
+                        dotsy=False,
                         hidespines='', showspines='',
-                        ):  # set x axis at y=0
+                        shorten=1,  # shorten spines to last tick, different options to play with
+                        spinelim=None, # if having a hard time shortening the spines use this
+                        label='', rotlabel=True, title='',  # text stuff
+                        below=True,  # move axes below
+                        clip=True,  # clip axes
+                        padright=True,  # automatically pad y-tick labels if y-axis and right side
+                        quick='UNUSED', # delete this
+                ):  # set x axis at y=0
     # todo add option to add top or right line?
     ax = ax or mpl.pyplot.gca()
 
+    xy, side = parse_xy(xy)
+    showspines += side
+
+    ax.set_clip_on(clip)
+
+
+    if not lims:
+        lims = ext
+
     if isinstance(ticks, (int, float)):
-        ticks = make_ticks(ext, ticks) # if num assume using step with current extents
+        ticks = make_ticks_zero(lims, ticks, xy=xy) # if num assume using step with current extents
         getattr(ax, 'set_'+xy+'ticks')(ticks)
     elif is_arr(ticks):
         getattr(ax, 'set_' + xy + 'ticks')(ticks)
     elif ticks == 'auto':
-        set_auto_tick(ax, xy=xy, ext=ext)
+        set_auto_tick(ax, xy=xy, ext=lims)
     else:
         print('pltx.format_axis: WARNING! no ticks passed, expect pboblems')
+
+    if minor:
+        ax.tick_params(axis=xy, which='minor')
+        getattr(ax, xy + 'axis').set_minor_locator(mpl.ticker.MultipleLocator(minor))
 
     if ticklabels:
         getattr(ax, 'set_'+xy+'ticklabels')(ticklabels)
@@ -496,10 +555,10 @@ def format_axis(ax=None, xy='x',
         fmt_ticks(ax=ax, xy=xy, fmt=fmt, app=app)
     if hideslice:
         hide_ticklabel(ax=ax, xy=xy, slice=hideslice)
-    if ext == '0max':
+    if lims == '0max':
         set_plot_extents(ax=ax, xy=xy, ext=[0, np.max(ticks)])
-    elif ext:
-        set_plot_extents(ax=ax, xy=xy, ext=ext)
+    elif lims:
+        set_plot_extents(ax=ax, xy=xy, ext=lims)
         # set_plot_extents(ax=ax, xy=xy, ext=ext, buff=0.0) # todo testing for semi log
     if shorten:
         shorten_spines(ax=ax, opt=shorten)
@@ -511,26 +570,36 @@ def format_axis(ax=None, xy='x',
     elif pos == 'hug':
         hug_spines(ax=ax, xy=xy)
 
-    if spinext:
-        ax.spines['right'].set_bounds(spinex) # todo need to allow for tweakng spine length
+    if spinelim:
+        ax.spines[trbl[side]].set_bounds(spinelim)
 
     if dotsy and xy == 'x':
         if not isinstance(dotsy, dict): dotsy = {}
         add_minor_ticks_bottom(ax, **dotsy)
-    if padright:
+    if xy == 'y' and side=='r' and padright:
         pad_right_ticks(ax=ax, pad=padright, ticks=ticklabels or ticks, fmt=fmt)
-    
+
     if grid:
         getattr(ax, xy+'axis').grid(grid)
+
 
     for s in hidespines:
         ax.spines[trbl[s]].set_visible(False)
     for s in showspines:
         ax.spines[trbl[s]].set_visible(True)
 
+    if label:  # todo need some kw settings in here, maybe label is a dict
+        if rotlabel and xy=='y': # I prefer rotated labels so make default
+            rotated_ylabel(ax, label=label, y=0.35/2.54, x=0.65/2.54, right=side=='r')
+        else:
+            getattr(ax, 'set_' + xy + 'label')(label)
+    if title:
+        ax.set_title(title)
+
     set_tick_line_color(ax=ax, color=tick_col)  # must be after spines are adjusted
 
     ax.set_axisbelow(below)
+
 
 format_spines_ticks = format_axis
 
